@@ -1783,6 +1783,7 @@ namespace chaiscript
       /// Reads a for block from input
       bool For() {
         bool retval = false;
+        bool ranged_for = false;
 
         const auto prev_stack_top = m_match_stack.size();
 
@@ -1794,7 +1795,11 @@ namespace chaiscript
           }
 
           if (!(For_Guards() && Char(')'))) {
-            throw exception::eval_error("Incomplete 'for' expression", File_Position(m_position.line, m_position.col), *m_filename);
+            if (!(Ranged_For() && Char(')'))) {
+              throw exception::eval_error("Incomplete 'for' expression", File_Position(m_position.line, m_position.col), *m_filename);
+            } else {
+              ranged_for = true;
+            }
           }
 
           while (Eol()) {}
@@ -1803,7 +1808,11 @@ namespace chaiscript
             throw exception::eval_error("Incomplete 'for' block", File_Position(m_position.line, m_position.col), *m_filename);
           }
 
-          build_match<eval::For_AST_Node>(prev_stack_top);
+          if (ranged_for) {
+            build_match<eval::For_AST_Node>(prev_stack_top);
+          } else {
+            build_match<eval::Ranged_For_AST_Node>(prev_stack_top);
+          }
         }
 
         return retval;
